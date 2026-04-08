@@ -13,6 +13,12 @@ body {
   text-align: center;
 }
 
+#wheel {
+  width: 95vw;          /* fills most of phone screen */
+  max-width: 500px;     /* stops it being huge on desktop */
+  display: block;
+  margin: 20px auto;
+}
 canvas { margin-top: 20px; }
 
 button {
@@ -80,7 +86,7 @@ button {
 <h1>🏇 GRAND NATIONAL 2026</h1>
 
 <div style="font-size:28px;">▼</div>
-<canvas id="wheel" width="320" height="320"></canvas>
+<canvas id="wheel"></canvas>
 
 <br>
 <button onclick="spin()">🎡 SPIN</button>
@@ -216,4 +222,3 @@ drawWheel(rotation);
 
 </body>
 </html>
-
