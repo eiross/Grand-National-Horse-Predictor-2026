@@ -1,1 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Grand National 2026 Picker</title>
 
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #000;
+  color: white;
+  text-align: center;
+}
+
+canvas { margin-top: 20px; }
+
+button {
+  margin-top: 20px;
+  padding: 14px 28px;
+  font-size: 18px;
+  background: #00c853;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+}
+
+.horse {
+  font-size: 48px;
+  font-weight: 900;
+}
+
+.number {
+  color: #00e676;
+  font-size: 20px;
+}
+
+/* Flash */
+#flashOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#flashText {
+  font-size: 70px;
+  color: #00e676;
+  font-weight: 900;
+}
+
+/* Confetti */
+.confetti {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  top: 0;
+  animation: fall linear forwards;
+}
+
+@keyframes fall {
+  to {
+    transform: translateY(100vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<h1>🏇 GRAND NATIONAL 2026</h1>
+
+<div style="font-size:28px;">▼</div>
+<canvas id="wheel" width="320" height="320"></canvas>
+
+<br>
+<button onclick="spin()">🎡 SPIN</button>
+
+<div class="number" id="number"></div>
+<div class="horse" id="horse">---</div>
+
+<div id="flashOverlay">
+  <div id="flashText"></div>
+</div>
+
+<script>
+const horses = [
+"1. I Am Maximus","2. Nick Rockett","3. Banbridge","4. Grangeclare West",
+"5. Gerri Colombe","6. Haiti Couleurs","7. Spillane's Tower","8. Firefox",
+"9. Monty's Star","10. Spanish Harlem","11. Lecky Watson","12. Champ Kiely",
+"13. Iroko","14. Favori De Champdou","15. Three Card Brag","16. Oscars Brother",
+"17. Mr Vango","18. High Class Hero","19. Stellar Story","20. Beauport",
+"21. Captain Cody","22. Jagwar","23. Perceval Legallois","24. Gorgeous Tom",
+"25. The Real Whacker","26. Quai De Bourbon","27. Answer To Kayf","28. Jordans",
+"29. Final Orders","30. Marble Sands","31. Panic Attack","32. Top Of The Bill",
+"33. Johnnywho","34. Twig"
+];
+
+const canvas = document.getElementById("wheel");
+const ctx = canvas.getContext("2d");
+
+const arc = (2 * Math.PI) / horses.length;
+let rotation = 0;
+let spinning = false;
+
+function drawWheel(rot) {
+  for (let i = 0; i < horses.length; i++) {
+    const angle = i * arc + rot;
+
+    ctx.beginPath();
+    ctx.moveTo(160,160);
+    ctx.arc(160,160,160,angle,angle + arc);
+    ctx.fillStyle = i % 2 === 0 ? "#00c853" : "#111";
+    ctx.fill();
+
+    ctx.save();
+    ctx.translate(160,160);
+    ctx.rotate(angle + arc/2);
+    ctx.fillStyle = "#fff";
+    ctx.font = "10px Arial";
+    ctx.fillText(horses[i].split(". ")[1], 70, 5);
+    ctx.restore();
+  }
+}
+
+function spin() {
+  if (spinning) return;
+  spinning = true;
+
+  const winner = Math.floor(Math.random() * horses.length);
+
+  const spins = 6; // consistent full spins
+  const pointer = -Math.PI / 2;
+
+  // 🎯 EXACT TARGET ANGLE
+  const targetAngle = pointer - (winner * arc + arc/2);
+
+  const finalRotation =
+    rotation + (Math.PI * 2 * spins) + (targetAngle - (rotation % (2*Math.PI)));
+
+  let start = null;
+  const duration = 4000;
+  const startRotation = rotation;
+
+  function animate(t) {
+    if (!start) start = t;
+
+    let p = (t - start) / duration;
+    if (p > 1) p = 1;
+
+    let ease = 1 - Math.pow(1 - p, 4);
+
+    let current = startRotation + ease * (finalRotation - startRotation);
+
+    ctx.clearRect(0,0,320,320);
+    drawWheel(current);
+
+    if (p < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      rotation = finalRotation % (2*Math.PI);
+      finish(winner);
+      spinning = false;
+    }
+  }
+
+  requestAnimationFrame(animate);
+}
+
+function finish(index) {
+  const result = horses[index];
+  const name = result.split(". ")[1];
+  const num = result.split(". ")[0];
+
+  document.getElementById("horse").innerText = name;
+  document.getElementById("number").innerText = "Runner #" + num;
+
+  flash(name);
+  confetti();
+}
+
+function flash(name) {
+  const overlay = document.getElementById("flashOverlay");
+  const text = document.getElementById("flashText");
+
+  text.innerText = name;
+  overlay.style.opacity = "1";
+
+  setTimeout(()=> overlay.style.opacity = "0", 2000);
+}
+
+function confetti() {
+  for (let i = 0; i < 100; i++) {
+    const el = document.createElement("div");
+    el.className = "confetti";
+    el.style.left = Math.random() * 100 + "vw";
+    el.style.background = ["#00e676","#fff","#ffd740","#ff5252"][Math.floor(Math.random()*4)];
+    el.style.animationDuration = (Math.random()*2+1)+"s";
+    document.body.appendChild(el);
+
+    setTimeout(()=>el.remove(),2000);
+  }
+}
+
+drawWheel(rotation);
+</script>
+
+</body>
+</html>
