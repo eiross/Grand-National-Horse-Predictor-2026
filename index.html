@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Grand National 2026 Predictor</title>
+<title>Grand National Predictor</title>
 
 <style>
 body {
@@ -11,10 +11,9 @@ body {
   color: white;
   text-align: center;
   font-family: Arial;
-  overflow-x: hidden;
 }
 
-/* FULLSCREEN LAYOUT */
+/* FULLSCREEN */
 .container {
   min-height: 100vh;
   display: flex;
@@ -34,12 +33,13 @@ button {
   margin: 20px auto;
   padding: 18px;
   width: 85%;
-  max-width: 360px;
+  max-width: 350px;
   font-size: 22px;
   background: #00c853;
   border: none;
   border-radius: 10px;
   color: white;
+  cursor: pointer;
 }
 
 .horse {
@@ -51,12 +51,12 @@ button {
   color: #00e676;
 }
 
-/* 🔥 BIG FLASH */
+/* FLASH */
 #flashOverlay {
   position: fixed;
   top:0; left:0;
   width:100%; height:100%;
-  background: rgba(0,0,0,0.95);
+  background:black;
   display:flex;
   justify-content:center;
   align-items:center;
@@ -66,19 +66,15 @@ button {
 
 #flashText {
   font-size: 12vw;
-  max-font-size: 120px;
   color:#00e676;
   font-weight:900;
-  text-align:center;
-  line-height:1.1;
-  transform: scale(0.6);
 }
 
-/* 🎉 BIG CONFETTI */
+/* CONFETTI */
 .confetti {
   position: fixed;
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   top: 0;
   animation: fall linear forwards;
 }
@@ -153,7 +149,7 @@ function drawWheel(rot) {
 
     ctx.save();
     ctx.translate(center, center);
-    ctx.rotate(angle + arc / 2);
+    ctx.rotate(angle + arc/2);
     ctx.fillStyle = "#fff";
     ctx.font = `${center * 0.08}px Arial`;
     ctx.fillText(horses[i].split(". ")[1], center * 0.45, 5);
@@ -167,40 +163,37 @@ function spin() {
 
   const winner = Math.floor(Math.random() * horses.length);
 
-  const spins = 6 + Math.random() * 2;
+  const spins = 6;
   const pointer = -Math.PI / 2;
 
-  const sliceCenter = winner * arc + arc / 2;
-
-  const currentNormalized = rotation % (2 * Math.PI);
+  // 🎯 SIMPLE + CORRECT (NO DRIFT)
+  const target =
+    pointer -
+    (winner * arc + arc/2);
 
   const finalRotation =
-    rotation +
-    (Math.PI * 2 * spins) +
-    (pointer - sliceCenter - currentNormalized);
+    (Math.PI * 2 * spins) + target;
 
   let start = null;
   const duration = 4000;
-  const startRotation = rotation;
 
   function animate(t) {
     if (!start) start = t;
 
-    let p = (t - start) / duration;
-    if (p > 1) p = 1;
+    let progress = (t - start) / duration;
+    if (progress > 1) progress = 1;
 
-    let ease = 1 - Math.pow(1 - p, 4);
+    let ease = 1 - Math.pow(1 - progress, 3);
 
-    let current =
-      startRotation + ease * (finalRotation - startRotation);
+    let current = ease * finalRotation;
 
     ctx.clearRect(0,0,canvas.width,canvas.height);
     drawWheel(current);
 
-    if (p < 1) {
+    if (progress < 1) {
       requestAnimationFrame(animate);
     } else {
-      rotation = finalRotation % (2*Math.PI);
+      rotation = target;
       finish(winner);
       spinning = false;
     }
@@ -227,22 +220,19 @@ function flash(name) {
 
   text.innerText = name;
   overlay.style.opacity = "1";
-  text.style.transform = "scale(1.2)";
 
-  setTimeout(() => text.style.transform = "scale(1)", 200);
-  setTimeout(() => overlay.style.opacity = "0", 2500);
+  setTimeout(()=> overlay.style.opacity="0",2000);
 }
 
 function confetti() {
-  for (let i = 0; i < 150; i++) {
+  for (let i = 0; i < 120; i++) {
     let el = document.createElement("div");
     el.className = "confetti";
     el.style.left = Math.random() * 100 + "vw";
-    el.style.background = ["#00e676","#fff","#ffd740","#ff5252","#40c4ff"][Math.floor(Math.random()*5)];
+    el.style.background = ["#00e676","#fff","#ffd740","#ff5252"][Math.floor(Math.random()*4)];
     el.style.animationDuration = (Math.random()*2+1)+"s";
     document.body.appendChild(el);
-
-    setTimeout(() => el.remove(), 3000);
+    setTimeout(()=>el.remove(),2500);
   }
 }
 
