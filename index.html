@@ -7,85 +7,83 @@
 <style>
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
   background: #000;
   color: white;
   text-align: center;
+  font-family: Arial;
 }
 
-h1 {
-  font-size: 22px;
-  margin-top: 15px;
+/* 🔥 FULLSCREEN LAYOUT */
+.container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
-/* ✅ Responsive wheel */
+/* 🎡 FULL WIDTH WHEEL */
 #wheel {
-  width: 90vw;
-  max-width: 500px;
-  aspect-ratio: 1/1;
-  display: block;
-  margin: 10px auto;
+  width: 100vw;
+  height: auto;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 button {
-  margin-top: 15px;
-  padding: 16px;
-  width: 80%;
-  max-width: 320px;
-  font-size: 20px;
+  margin: 15px auto;
+  padding: 18px;
+  width: 85%;
+  max-width: 350px;
+  font-size: 22px;
   background: #00c853;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   color: white;
-  cursor: pointer;
 }
 
 .horse {
-  font-size: 42px;
+  font-size: 44px;
   font-weight: 900;
 }
 
 .number {
   color: #00e676;
-  font-size: 20px;
 }
 
 /* Flash */
 #flashOverlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: black;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  opacity: 0;
-  pointer-events: none;
-  z-index: 9999;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:black;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  opacity:0;
+  pointer-events:none;
+  z-index:9999;
 }
 
 #flashText {
   font-size: 60px;
-  color: #00e676;
-  font-weight: 900;
-  text-align: center;
+  color:#00e676;
+  font-weight:bold;
+  text-align:center;
 }
 
 /* Confetti */
 .confetti {
   position: fixed;
-  width: 8px;
-  height: 8px;
-  top: 0;
+  width:8px;
+  height:8px;
+  top:0;
   animation: fall linear forwards;
 }
 
 @keyframes fall {
   to {
     transform: translateY(100vh) rotate(360deg);
-    opacity: 0;
+    opacity:0;
   }
 }
 </style>
@@ -93,22 +91,21 @@ button {
 
 <body>
 
-<h1>🏇 GRAND NATIONAL 2026</h1>
+<div class="container">
 
-<div style="font-size:28px;">▼</div>
+<div style="font-size:30px;">▼</div>
 <canvas id="wheel"></canvas>
 
 <button onclick="spin()">🎡 SPIN</button>
 
-<div class="number" id="number"></div>
-<div class="horse" id="horse">---</div>
+<div id="number"></div>
+<div id="horse" class="horse">---</div>
+
+</div>
 
 <div id="flashOverlay">
   <div id="flashText"></div>
 </div>
-
-<audio id="spinSound" src="https://cdn.pixabay.com/audio/2022/10/16/audio_12b3e3c1b4.mp3"></audio>
-<audio id="winSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_8a5b1c1d0c.mp3"></audio>
 
 <script>
 const horses = [
@@ -130,35 +127,33 @@ let rotation = 0;
 let spinning = false;
 
 function resizeCanvas() {
-  const size = canvas.clientWidth;
+  const size = Math.min(window.innerWidth, 600);
   canvas.width = size;
   canvas.height = size;
 }
-
 window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
 
-const arc = () => (2 * Math.PI) / horses.length;
+const arc = (2 * Math.PI) / horses.length;
 
 function drawWheel(rot) {
   const center = canvas.width / 2;
-  const slice = arc();
 
   for (let i = 0; i < horses.length; i++) {
-    const angle = i * slice + rot;
+    const angle = i * arc + rot;
 
     ctx.beginPath();
     ctx.moveTo(center, center);
-    ctx.arc(center, center, center, angle, angle + slice);
+    ctx.arc(center, center, center, angle, angle + arc);
     ctx.fillStyle = i % 2 === 0 ? "#00c853" : "#111";
     ctx.fill();
 
     ctx.save();
     ctx.translate(center, center);
-    ctx.rotate(angle + slice/2);
+    ctx.rotate(angle + arc / 2);
     ctx.fillStyle = "#fff";
     ctx.font = `${center * 0.08}px Arial`;
-    ctx.fillText(horses[i].split(". ")[1], center * 0.4, 5);
+    ctx.fillText(horses[i].split(". ")[1], center * 0.45, 5);
     ctx.restore();
   }
 }
@@ -167,42 +162,38 @@ function spin() {
   if (spinning) return;
   spinning = true;
 
-  document.getElementById("spinSound").play().catch(()=>{});
-
   const winner = Math.floor(Math.random() * horses.length);
 
-  const spins = 5 + Math.random() * 3;
-  const pointer = -Math.PI / 2;
-  const slice = arc();
+  const spins = 6 + Math.random() * 2;
 
-  const targetAngle = pointer - (winner * slice + slice/2);
-
-  const finalRotation =
-    rotation +
+  // 🎯 PERFECT TARGET ALIGNMENT (FIXED)
+  const pointerAngle = -Math.PI / 2;
+  const targetRotation =
     (Math.PI * 2 * spins) +
-    (targetAngle - (rotation % (2*Math.PI)));
+    pointerAngle -
+    (winner * arc) -
+    arc / 2;
 
   let start = null;
   const duration = 4000;
-  const startRotation = rotation;
 
   function animate(t) {
     if (!start) start = t;
 
-    let p = (t - start) / duration;
-    if (p > 1) p = 1;
+    let progress = (t - start) / duration;
+    if (progress > 1) progress = 1;
 
-    let ease = 1 - Math.pow(1 - p, 4);
+    let ease = 1 - Math.pow(1 - progress, 4);
 
-    let current = startRotation + ease * (finalRotation - startRotation);
+    let current = ease * targetRotation;
 
     ctx.clearRect(0,0,canvas.width,canvas.height);
     drawWheel(current);
 
-    if (p < 1) {
+    if (progress < 1) {
       requestAnimationFrame(animate);
     } else {
-      rotation = finalRotation % (2*Math.PI);
+      rotation = targetRotation % (2*Math.PI);
       finish(winner);
       spinning = false;
     }
@@ -219,8 +210,6 @@ function finish(index) {
   document.getElementById("horse").innerText = name;
   document.getElementById("number").innerText = "Runner #" + num;
 
-  document.getElementById("winSound").play().catch(()=>{});
-
   flash(name);
   confetti();
 }
@@ -232,23 +221,22 @@ function flash(name) {
   text.innerText = name;
   overlay.style.opacity = "1";
 
-  setTimeout(() => overlay.style.opacity = "0", 2200);
+  setTimeout(()=> overlay.style.opacity="0",2000);
 }
 
 function confetti() {
-  for (let i = 0; i < 60; i++) {
-    let el = document.createElement("div");
-    el.className = "confetti";
-    el.style.left = Math.random() * 100 + "vw";
-    el.style.background = ["#00e676","#fff","#ffd740","#ff5252"][Math.floor(Math.random()*4)];
-    el.style.animationDuration = (Math.random()*2+1)+"s";
+  for (let i=0;i<80;i++){
+    let el=document.createElement("div");
+    el.className="confetti";
+    el.style.left=Math.random()*100+"vw";
+    el.style.background=["#00e676","#fff","#ffd740","#ff5252"][Math.floor(Math.random()*4)];
+    el.style.animationDuration=(Math.random()*2+1)+"s";
     document.body.appendChild(el);
-
-    setTimeout(() => el.remove(), 2000);
+    setTimeout(()=>el.remove(),2000);
   }
 }
 
-drawWheel(rotation);
+drawWheel(0);
 </script>
 
 </body>
