@@ -13,7 +13,6 @@ body {
   font-family: Arial;
 }
 
-/* FULLSCREEN */
 .container {
   min-height: 100vh;
   display: flex;
@@ -21,12 +20,10 @@ body {
   justify-content: center;
 }
 
-/* FULL WIDTH WHEEL */
 #wheel {
   width: 95vw;
   max-width: 600px;
   margin: 0 auto;
-  display: block;
 }
 
 button {
@@ -51,7 +48,6 @@ button {
   color: #00e676;
 }
 
-/* FLASH */
 #flashOverlay {
   position: fixed;
   top:0; left:0;
@@ -70,7 +66,6 @@ button {
   font-weight:900;
 }
 
-/* CONFETTI */
 .confetti {
   position: fixed;
   width: 10px;
@@ -91,7 +86,6 @@ button {
 <body>
 
 <div class="container">
-
 <div style="font-size:30px;">▼</div>
 <canvas id="wheel"></canvas>
 
@@ -99,7 +93,6 @@ button {
 
 <div id="number"></div>
 <div id="horse" class="horse">---</div>
-
 </div>
 
 <div id="flashOverlay">
@@ -163,16 +156,13 @@ function spin() {
 
   const winner = Math.floor(Math.random() * horses.length);
 
-  const spins = 6;
+  const spins = 5 + Math.random() * 2;
   const pointer = -Math.PI / 2;
 
-  // 🎯 SIMPLE + CORRECT (NO DRIFT)
-  const target =
-    pointer -
-    (winner * arc + arc/2);
+  const targetAngle = pointer - (winner * arc + arc / 2);
 
-  const finalRotation =
-    (Math.PI * 2 * spins) + target;
+  const startRotation = rotation;
+  const finalRotation = startRotation + (Math.PI * 2 * spins) + (targetAngle - (startRotation % (2*Math.PI)));
 
   let start = null;
   const duration = 4000;
@@ -185,15 +175,15 @@ function spin() {
 
     let ease = 1 - Math.pow(1 - progress, 3);
 
-    let current = ease * finalRotation;
+    rotation = startRotation + ease * (finalRotation - startRotation);
 
     ctx.clearRect(0,0,canvas.width,canvas.height);
-    drawWheel(current);
+    drawWheel(rotation);
 
     if (progress < 1) {
       requestAnimationFrame(animate);
     } else {
-      rotation = target;
+      rotation = finalRotation % (2*Math.PI);
       finish(winner);
       spinning = false;
     }
@@ -236,7 +226,7 @@ function confetti() {
   }
 }
 
-drawWheel(0);
+drawWheel(rotation);
 </script>
 
 </body>
