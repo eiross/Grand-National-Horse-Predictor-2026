@@ -1,54 +1,42 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Grand National Predictor</title>
+<title>Horse Picker</title>
 
 <style>
 body {
   margin: 0;
   background: #000;
-  color: white;
+  color: #fff;
   text-align: center;
   font-family: Arial;
 }
 
-.container {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-#wheel {
+canvas {
   width: 95vw;
-  max-width: 600px;
-  margin: 0 auto;
+  max-width: 500px;
+  display: block;
+  margin: 20px auto;
 }
 
 button {
-  margin: 20px auto;
-  padding: 18px;
-  width: 85%;
-  max-width: 350px;
-  font-size: 22px;
+  padding: 15px 25px;
+  font-size: 20px;
   background: #00c853;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   color: white;
   cursor: pointer;
 }
 
 .horse {
-  font-size: 42px;
-  font-weight: 900;
+  font-size: 36px;
+  margin-top: 10px;
 }
 
-.number {
-  color: #00e676;
-}
-
-#flashOverlay {
+/* FLASH */
+#flash {
   position: fixed;
   top:0; left:0;
   width:100%; height:100%;
@@ -56,22 +44,18 @@ button {
   display:flex;
   justify-content:center;
   align-items:center;
-  opacity:0;
-  z-index:9999;
-}
-
-#flashText {
   font-size: 12vw;
   color:#00e676;
-  font-weight:900;
+  opacity:0;
 }
 
+/* CONFETTI */
 .confetti {
   position: fixed;
   width: 10px;
   height: 10px;
   top: 0;
-  animation: fall linear forwards;
+  animation: fall 2s linear forwards;
 }
 
 @keyframes fall {
@@ -85,148 +69,123 @@ button {
 
 <body>
 
-<div class="container">
-<div style="font-size:30px;">▼</div>
 <canvas id="wheel"></canvas>
+<button onclick="spin()">SPIN</button>
 
-<button onclick="spin()">🎡 SPIN</button>
+<div class="horse" id="result">---</div>
 
-<div id="number"></div>
-<div id="horse" class="horse">---</div>
-</div>
-
-<div id="flashOverlay">
-  <div id="flashText"></div>
-</div>
+<div id="flash"></div>
 
 <script>
 const horses = [
-"1. I Am Maximus","2. Nick Rockett","3. Banbridge","4. Grangeclare West",
-"5. Gerri Colombe","6. Haiti Couleurs","7. Spillane's Tower","8. Firefox",
-"9. Monty's Star","10. Spanish Harlem","11. Lecky Watson","12. Champ Kiely",
-"13. Iroko","14. Favori De Champdou","15. Three Card Brag","16. Oscars Brother",
-"17. Mr Vango","18. High Class Hero","19. Stellar Story","20. Beauport",
-"21. Captain Cody","22. Jagwar","23. Perceval Legallois","24. Gorgeous Tom",
-"25. The Real Whacker","26. Quai De Bourbon","27. Answer To Kayf","28. Jordans",
-"29. Final Orders","30. Marble Sands","31. Panic Attack","32. Top Of The Bill",
-"33. Johnnywho","34. Twig"
+"I Am Maximus","Nick Rockett","Banbridge","Grangeclare West",
+"Gerri Colombe","Haiti Couleurs","Spillane's Tower","Firefox",
+"Monty's Star","Spanish Harlem","Lecky Watson","Champ Kiely",
+"Iroko","Favori De Champdou","Three Card Brag","Oscars Brother",
+"Mr Vango","High Class Hero","Stellar Story","Beauport",
+"Captain Cody","Jagwar","Perceval Legallois","Gorgeous Tom",
+"The Real Whacker","Quai De Bourbon","Answer To Kayf","Jordans",
+"Final Orders","Marble Sands","Panic Attack","Top Of The Bill",
+"Johnnywho","Twig"
 ];
 
 const canvas = document.getElementById("wheel");
 const ctx = canvas.getContext("2d");
 
-let rotation = 0;
-let spinning = false;
-
-function resizeCanvas() {
-  const size = Math.min(window.innerWidth * 0.95, 600);
-  canvas.width = size;
-  canvas.height = size;
+function resize() {
+  canvas.width = canvas.clientWidth;
+  canvas.height = canvas.clientWidth;
 }
-window.addEventListener("resize", resizeCanvas);
-resizeCanvas();
+window.addEventListener("resize", resize);
+resize();
 
-const arc = (2 * Math.PI) / horses.length;
+const arc = (2*Math.PI)/horses.length;
 
-function drawWheel(rot) {
-  const center = canvas.width / 2;
+function draw(rot) {
+  const c = canvas.width/2;
 
-  for (let i = 0; i < horses.length; i++) {
-    const angle = i * arc + rot;
+  for(let i=0;i<horses.length;i++){
+    const angle = i*arc + rot;
 
     ctx.beginPath();
-    ctx.moveTo(center, center);
-    ctx.arc(center, center, center, angle, angle + arc);
-    ctx.fillStyle = i % 2 === 0 ? "#00c853" : "#111";
+    ctx.moveTo(c,c);
+    ctx.arc(c,c,c,angle,angle+arc);
+    ctx.fillStyle = i%2 ? "#111" : "#00c853";
     ctx.fill();
 
     ctx.save();
-    ctx.translate(center, center);
+    ctx.translate(c,c);
     ctx.rotate(angle + arc/2);
     ctx.fillStyle = "#fff";
-    ctx.font = `${center * 0.08}px Arial`;
-    ctx.fillText(horses[i].split(". ")[1], center * 0.45, 5);
+    ctx.font = (c*0.08)+"px Arial";
+    ctx.fillText(horses[i], c*0.4, 5);
     ctx.restore();
   }
 }
 
+let spinning = false;
+
 function spin() {
-  if (spinning) return;
+  if(spinning) return;
   spinning = true;
 
-  const winner = Math.floor(Math.random() * horses.length);
+  const winner = Math.floor(Math.random()*horses.length);
 
-  const spins = 5 + Math.random() * 2;
-  const pointer = -Math.PI / 2;
+  const pointer = -Math.PI/2;
+  const target = pointer - (winner*arc + arc/2);
 
-  const targetAngle = pointer - (winner * arc + arc / 2);
-
-  const startRotation = rotation;
-  const finalRotation = startRotation + (Math.PI * 2 * spins) + (targetAngle - (startRotation % (2*Math.PI)));
+  const spins = 5;
+  const final = (Math.PI*2*spins) + target;
 
   let start = null;
-  const duration = 4000;
 
-  function animate(t) {
-    if (!start) start = t;
+  function anim(t){
+    if(!start) start = t;
 
-    let progress = (t - start) / duration;
-    if (progress > 1) progress = 1;
+    let p = (t-start)/3000;
+    if(p>1) p=1;
 
-    let ease = 1 - Math.pow(1 - progress, 3);
+    let ease = 1 - Math.pow(1-p,3);
 
-    rotation = startRotation + ease * (finalRotation - startRotation);
+    let rot = ease * final;
 
     ctx.clearRect(0,0,canvas.width,canvas.height);
-    drawWheel(rotation);
+    draw(rot);
 
-    if (progress < 1) {
-      requestAnimationFrame(animate);
+    if(p<1){
+      requestAnimationFrame(anim);
     } else {
-      rotation = finalRotation % (2*Math.PI);
-      finish(winner);
+      showResult(winner);
       spinning = false;
     }
   }
 
-  requestAnimationFrame(animate);
+  requestAnimationFrame(anim);
 }
 
-function finish(index) {
-  const result = horses[index];
-  const name = result.split(". ")[1];
-  const num = result.split(". ")[0];
+function showResult(i){
+  const name = horses[i];
+  document.getElementById("result").innerText = name;
 
-  document.getElementById("horse").innerText = name;
-  document.getElementById("number").innerText = "Runner #" + num;
+  // FLASH
+  const flash = document.getElementById("flash");
+  flash.innerText = name;
+  flash.style.opacity = 1;
 
-  flash(name);
-  confetti();
-}
+  setTimeout(()=>flash.style.opacity=0,2000);
 
-function flash(name) {
-  const overlay = document.getElementById("flashOverlay");
-  const text = document.getElementById("flashText");
-
-  text.innerText = name;
-  overlay.style.opacity = "1";
-
-  setTimeout(()=> overlay.style.opacity="0",2000);
-}
-
-function confetti() {
-  for (let i = 0; i < 120; i++) {
-    let el = document.createElement("div");
-    el.className = "confetti";
-    el.style.left = Math.random() * 100 + "vw";
-    el.style.background = ["#00e676","#fff","#ffd740","#ff5252"][Math.floor(Math.random()*4)];
-    el.style.animationDuration = (Math.random()*2+1)+"s";
-    document.body.appendChild(el);
-    setTimeout(()=>el.remove(),2500);
+  // CONFETTI
+  for(let i=0;i<100;i++){
+    let d = document.createElement("div");
+    d.className="confetti";
+    d.style.left=Math.random()*100+"vw";
+    d.style.background=["#fff","#00e676","#ffd740"][Math.floor(Math.random()*3)];
+    document.body.appendChild(d);
+    setTimeout(()=>d.remove(),2000);
   }
 }
 
-drawWheel(rotation);
+draw(0);
 </script>
 
 </body>
